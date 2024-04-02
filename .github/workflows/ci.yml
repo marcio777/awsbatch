@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to ECR
+name: CI Pipeline - Build, Push Image to ECR, and Update AWS Batch Job Definition
 
 on:
   push:
@@ -6,26 +6,44 @@ on:
       - main
 
 jobs:
-  build-and-push:
+  build-push-update-batch:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          registry: ${{ secrets.ECR_REGISTRY }}
-          region: us-east-1
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: YOUR_AWS_REGION
 
-      - name: Build Docker Image
-        run: |
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/my-docker-image:latest .
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Push Docker Image
-        run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/my-docker-image:latest
+    - name: Generate image name
+      id: generate-image-name
+      run: echo "::set-output name=image_name_to_use::${GITHUB_REPOSITORY##*/}-$(date +'%Y%m%d%H%M%S')"
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ steps.generate-image-name.outputs.image_name_to_use }} .
+
+    - name: Tag Docker image
+      run: docker tag ${{ steps.generate-image-name.outputs.image_name_to_use }} ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}
+
+    - name: Push Docker image to ECR
+      run: docker push ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}
+
+    - name: Update AWS Batch Job Definition
+      run: |
+        aws batch register-job-definition --job-definition-name YOUR_JOB_DEFINITION_NAME \
+          --type container \
+          --container-properties '{
+            "image": "${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}",
+            "vcpus": YOUR_VCPUS,
+            "memory": YOUR_MEMORY
+          }'
