@@ -37,21 +37,21 @@ jobs:
 
     - name: Build Docker image
       run: |
-       docker build -t ${{ steps.generate-image-name.outputs.image_name_to_use }} .
+       docker build -t ${{ steps.get-image-name-image-name.outputs.image_name_to_use }} .
 
 
     - name: Tag Docker image
-      run: docker tag ${{ steps.generate-image-name.outputs.image_name_to_use }} ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}
+      run: docker tag ${{ steps.get-image-name-image-name.outputs.image_name_to_use }} ${{ steps.login-ecr.outputs.registry }}/${{ steps.get-image-name-image-name.outputs.image_name_to_use }}
 
     - name: Push Docker image to ECR
-      run: docker push ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}
+      run: docker push ${{ steps.login-ecr.outputs.registry }}/${{ steps.get-image-name.outputs.image_name_to_use }}
 
     - name: Update AWS Batch Job Definition
       run: |
         aws batch register-job-definition --job-definition-name YOUR_JOB_DEFINITION_NAME \
           --type container \
           --container-properties '{
-            "image": "${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name_to_use }}",
+            "image": "${{ steps.login-ecr.outputs.registry }}/${{ steps.get-image-name-image-name.outputs.image_name_to_use }}",
             "vcpus": YOUR_VCPUS,
             "memory": YOUR_MEMORY
           }'
