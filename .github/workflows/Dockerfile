@@ -1,11 +1,11 @@
-# Use a imagem base do Python, por exemplo
+# Use uma imagem base do Python
 FROM python:3.9
 
-# Instale as dependências necessárias
-RUN pip install boto3 awscli
+# Defina o diretório de trabalho dentro do contêiner
+WORKDIR /app
 
-# Copie os scripts ou arquivos necessários para dentro do contêiner
-COPY seu_script.py /app/seu_script.py
+# Copie o arquivo do aplicativo para dentro do contêiner
+COPY app.py .
 
-# Defina o comando padrão a ser executado quando o contêiner for iniciado
-CMD ["python", "/app/seu_script.py"]
+# Comando a ser executado quando o contêiner for iniciado
+CMD ["python", "app.py"]
