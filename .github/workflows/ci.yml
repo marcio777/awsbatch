@@ -26,7 +26,14 @@ jobs:
 
     - name: Generate image name
       id: generate-image-name
-      run: echo "::set-output name=image_name_to_use::${GITHUB_REPOSITORY##*/}-$(date +'%Y%m%d%H%M%S')"
+      run: echo "::set-output name=image_name::awsbatch-${{ github.run_number }}"
+
+    - name: Create ECR Repository
+      run: |
+        aws ecr create-repository --repository-name ${{ steps.get-image-name.outputs.image_name }} --region sa-east-1
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     - name: Build Docker image
       run: |
