@@ -37,7 +37,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-       docker build -t ${{ steps.get-image-name-image-name.outputs.image_name_to_use }} .
+       docker build -t ${{ steps.get-image-name.outputs.image_name_to_use }} .
 
 
     - name: Tag Docker image
