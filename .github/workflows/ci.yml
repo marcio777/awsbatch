@@ -30,14 +30,14 @@ jobs:
 
     - name: Create ECR Repository
       run: |
-        aws ecr create-repository --repository-name ${{ steps.generate-image-nameoutputs.image_name }} --region sa-east-1
+        aws ecr create-repository --repository-name ${{ steps.generate-image-name.outputs.image_name }} --region sa-east-1
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     - name: Build Docker image
       run: |
-       docker build -t ${{ steps.ggenerate-image-name.outputs.image_name_to_use }} .
+       docker build -t ${{ steps.generate-image-name.outputs.image_name_to_use }} .
 
 
     - name: Tag Docker image
