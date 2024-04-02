@@ -25,7 +25,7 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-        needs:Configure AWS Credentials
+        needs: Configure AWS Credentials
 
       - name: Generate image name
         id: generate-image-name
