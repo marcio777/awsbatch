@@ -1,0 +1,32 @@
+name: Upload to ECR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry: your-aws-account-id.dkr.ecr.your-region.amazonaws.com
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t your-image-name .
+          docker tag your-image-name:latest ${{ steps.login-ecr.outputs.registry }}/your-image-name:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/your-image-name:latest
+
+      - name: Create ECR repository (if not exists)
+        id: create-ecr-repo
+        run: |
+          aws ecr describe-repositories --repository-names your-repo-name || aws ecr create-repository --repository-name your-repo-name
