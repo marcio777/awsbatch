@@ -30,7 +30,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-       docker build -t awsbatch-20240402011833 -f .github/workflows/Dockerfile .
+       docker build -t ${{ steps.generate-image-name.outputs.image_name_to_use }} .
 
 
     - name: Tag Docker image
