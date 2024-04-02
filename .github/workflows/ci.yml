@@ -48,6 +48,6 @@ jobs:
             --type container \
             --container-properties '{
               "image": "${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name }}",
-              "vcpus": YOUR_VCPUS,
-              "memory": YOUR_MEMORY
+              "vcpus": 1,
+              "memory": 2048
             }'
