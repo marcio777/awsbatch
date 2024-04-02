@@ -12,44 +12,49 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-        needs: build-push-update-batch
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
-        needs: Checkout Repository
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: sa-east-1
+        # Esta etapa não tem dependências, portanto, não precisa de 'needs'
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        # Esta etapa depende da etapa 'Configure AWS Credentials'
         needs: Configure AWS Credentials
 
       - name: Generate image name
         id: generate-image-name
         run: echo "::set-output name=image_name::awsbatch-${{ github.run_number }}"
+        # Esta etapa depende da etapa 'Login to Amazon ECR'
         needs: Login to Amazon ECR
 
       - name: Create ECR Repository
         run: |
           aws ecr create-repository --repository-name ${{ steps.generate-image-name.outputs.image_name }} --region sa-east-1
+        # Esta etapa depende da etapa 'Generate image name'
         needs: Generate image name
 
       - name: Build Docker image
         run: |
           docker build -t ${{ steps.generate-image-name.outputs.image_name }} .
+        # Esta etapa depende da etapa 'Create ECR Repository'
         needs: Create ECR Repository
 
       - name: Tag Docker image
         run: docker tag ${{ steps.generate-image-name.outputs.image_name }} ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name }}
+        # Esta etapa depende da etapa 'Build Docker image'
         needs: Build Docker image
+
       - name: Push Docker image to ECR
         run: docker push ${{ steps.login-ecr.outputs.registry }}/${{ steps.generate-image-name.outputs.image_name }}
+        # Esta etapa não tem dependências, portanto, não precisa de 'needs'
 
       - name: Update AWS Batch Job Definition
-        needs: Tag Docker image
         run: |
           aws batch register-job-definition --job-definition-name YOUR_JOB_DEFINITION_NAME \
             --type container \
@@ -58,6 +63,5 @@ jobs:
               "vcpus": 1,
               "memory": 2048
             }'
-
-
-            
+        # Esta etapa depende da etapa 'Push Docker image to ECR'
+        needs: Push Docker image to ECR
